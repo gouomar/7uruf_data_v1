@@ -54,7 +54,7 @@ NUM_EPOCHS = 20                 # How many times to go through ALL the data
 # =============================================================================
 # These define the structure of your CNN
 CONV1_OUT_CHANNELS = 32         # First conv layer output channels
-CONV2_OUT_CHANNELS = 64         # Second conv layer output channels
+CONV2_OUT_CHANNELS = 128         # Second conv layer output channels
 HIDDEN_SIZE = 128               # Fully connected hidden layer size
 
 # =============================================================================
