@@ -47,7 +47,6 @@ class ArabicCNN(nn.Module):
 
 if __name__ == "__main__":
     model = ArabicCNN()
-    print_model_summary(model)
     # fake data for test only Nabil ola Omar fach ghatraini model hahowa example dyal data:
     dummy_input = torch.randn(1, 1, IMAGE_SIZE, IMAGE_SIZE)
     output = model(dummy_input)
