@@ -1,64 +1,3 @@
-"""
-================================================================================
-PILLAR 2: THE ARCHITECTURE (model.py)
-================================================================================
-
-🎯 PURPOSE:
-    Define the "brain" structure - the Convolutional Neural Network (CNN)
-
-📚 CONCEPTS YOU NEED TO LEARN FIRST:
-    1. What is a Neural Network? (Layers of connected nodes)
-    2. What is a Convolution? (A filter that slides over the image)
-    3. What is Pooling? (Reducing image size while keeping important info)
-    4. What is an Activation Function? (Introduces non-linearity)
-    5. What is a Fully Connected Layer? (Every neuron connected to every input)
-
-🔑 KEY PYTORCH CLASSES:
-    - nn.Module: Base class for all neural networks
-    - nn.Conv2d: 2D Convolution layer
-    - nn.MaxPool2d: Max pooling layer
-    - nn.Linear: Fully connected layer
-    - nn.ReLU: Activation function (Rectified Linear Unit)
-    - nn.Flatten: Flatten multi-dim tensor to 1D
-
-📖 RESOURCES TO STUDY (DO THIS FIRST!):
-    - 3Blue1Brown "What is a Neural Network": https://www.youtube.com/watch?v=aircAruvnKk
-    - 3Blue1Brown "What is Convolution": https://www.youtube.com/watch?v=KuXjwB4LzSA
-    - PyTorch nn.Module: https://pytorch.org/tutorials/beginner/basics/buildmodel_tutorial.html
-
-💡 THE BIG PICTURE - How a CNN processes an image:
-
-    INPUT IMAGE (32x32x1)
-          ↓
-    ┌─────────────────────────────────────────────────────────────────────┐
-    │  CONV LAYER 1: Detect simple features (edges, corners)              │
-    │  [Conv2d] → [ReLU] → [MaxPool2d]                                    │
-    │  32x32x1 → 32x32x32 → 32x32x32 → 16x16x32                           │
-    └─────────────────────────────────────────────────────────────────────┘
-          ↓
-    ┌─────────────────────────────────────────────────────────────────────┐
-    │  CONV LAYER 2: Detect complex features (curves, parts of letters)   │
-    │  [Conv2d] → [ReLU] → [MaxPool2d]                                    │
-    │  16x16x32 → 16x16x64 → 16x16x64 → 8x8x64                            │
-    └─────────────────────────────────────────────────────────────────────┘
-          ↓
-    ┌─────────────────────────────────────────────────────────────────────┐
-    │  FLATTEN: Convert 2D feature maps to 1D vector                      │
-    │  8x8x64 → 4096                                                      │
-    └─────────────────────────────────────────────────────────────────────┘
-          ↓
-    ┌─────────────────────────────────────────────────────────────────────┐
-    │  FULLY CONNECTED: Learn combinations of features                    │
-    │  [Linear] → [ReLU] → [Linear]                                       │
-    │  4096 → 128 → 28 (number of classes)                                │
-    └─────────────────────────────────────────────────────────────────────┘
-          ↓
-    OUTPUT: 28 numbers (one score for each Arabic letter)
-            The highest score = the prediction!
-
-================================================================================
-"""
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -106,42 +45,10 @@ class ArabicCNN(nn.Module):
 
         return x
 
-
-def count_parameters(model):
-    """
-    Count the total number of trainable parameters in the model.
-
-    This helps you understand the complexity of your model.
-    More parameters = more learning capacity, but also more prone to overfitting.
-
-    Args:
-        model: The PyTorch model
-
-    Returns:
-        int: Total number of trainable parameters
-    """
-    return sum(p.numel() for p in model.parameters() if p.requires_grad)
-
-
-def print_model_summary(model):
-    """
-    Print a summary of the model architecture.
-
-    Args:
-        model: The PyTorch model
-    """
-    print("=" * 60)
-    print("MODEL SUMMARY")
-    print("=" * 60)
-    print(model)
-    print("=" * 60)
-    print(f"Total trainable parameters: {count_parameters(model):,}")
-    print("=" * 60)
-
 if __name__ == "__main__":
     model = ArabicCNN()
     print_model_summary(model)
-
+    # fake data for test only Nabil ola Omar fach ghatraini model hahowa example dyal data:
     dummy_input = torch.randn(1, 1, IMAGE_SIZE, IMAGE_SIZE)
     output = model(dummy_input)
 
