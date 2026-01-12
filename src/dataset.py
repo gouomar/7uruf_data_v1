@@ -49,7 +49,8 @@ import pandas as pd
 
 # Import our config
 import sys
-sys.path.append('..')
+
+sys.path.append("..")
 from config import IMAGE_SIZE, BATCH_SIZE, DATA_DIR
 
 
@@ -152,22 +153,18 @@ def get_transforms():
     - Convert to Tensor (0-255 → 0-1)
     - Normalize values
 
-    TODO:
-    Create a transforms.Compose() with:
-    1. transforms.Resize((IMAGE_SIZE, IMAGE_SIZE))
-    2. transforms.Grayscale(num_output_channels=1)  # If images are grayscale
-    3. transforms.ToTensor()  # Converts to tensor and scales to [0,1]
-    4. transforms.Normalize((0.5,), (0.5,))  # Scale to [-1,1]
-
     Returns:
         transforms.Compose: The transformation pipeline
     """
-    # TODO: Implement this
-    # transform = transforms.Compose([
-    #     ???
-    # ])
-    # return transform
-    pass
+    transform = transforms.Compose(
+        [
+            transforms.Resize((IMAGE_SIZE, IMAGE_SIZE)),
+            transforms.Grayscale(num_output_channels=1),
+            transforms.ToTensor(),
+            transforms.Normalize((0.5,), (0.5,)),
+        ]
+    )
+    return transform
 
 
 def create_data_loaders(train_dataset, val_dataset):
@@ -185,18 +182,14 @@ def create_data_loaders(train_dataset, val_dataset):
 
     Returns:
         tuple: (train_loader, val_loader)
-
-    TODO:
-    Use torch.utils.data.DataLoader with:
-    - batch_size=BATCH_SIZE
-    - shuffle=True for training, False for validation
-    - num_workers=2 (parallel loading)
     """
-    # TODO: Implement this
-    # train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
-    # val_loader = DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=False)
-    # return train_loader, val_loader
-    pass
+    train_loader = DataLoader(
+        train_dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=0
+    )
+    val_loader = DataLoader(
+        val_dataset, batch_size=BATCH_SIZE, shuffle=False, num_workers=0
+    )
+    return train_loader, val_loader
 
 
 # =============================================================================
