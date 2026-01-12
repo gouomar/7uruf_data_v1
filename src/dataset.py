@@ -1,228 +1,125 @@
-"""
-================================================================================
-PILLAR 1: DATA INGESTION (dataset.py)
-================================================================================
-
-🎯 PURPOSE:
-    Load images from disk and convert them into a format PyTorch can use.
-
-📚 CONCEPTS YOU NEED TO LEARN FIRST:
-    1. What is a Tensor? (Think: a multi-dimensional array/matrix)
-    2. What is a Dataset? (A collection of data samples)
-    3. What is a DataLoader? (A tool to feed data in batches)
-    4. What is Normalization? (Scaling values to a standard range)
-
-🔑 KEY PYTORCH CLASSES:
-    - torch.utils.data.Dataset: Base class for all datasets
-    - torch.utils.data.DataLoader: Loads data in batches
-    - torchvision.transforms: Image transformations
-
-📖 RESOURCES TO STUDY:
-    - PyTorch Dataset Tutorial: https://pytorch.org/tutorials/beginner/data_loading_tutorial.html
-    - Transforms: https://pytorch.org/vision/stable/transforms.html
-
-💡 THE BIG PICTURE:
-
-    [Image Files on Disk]
-            ↓
-    [Load with PIL/OpenCV]
-            ↓
-    [Convert to Tensor (numbers)]
-            ↓
-    [Normalize (scale to 0-1)]
-            ↓
-    [Create Dataset object]
-            ↓
-    [Wrap in DataLoader]
-            ↓
-    [Feed to Model in batches]
-
-================================================================================
-"""
-
 import os
-import torch
-from torch.utils.data import Dataset, DataLoader
-from torchvision import transforms
 from PIL import Image
-import pandas as pd
 
-# Import our config
+import torch
+from torch.utils.data import Dataset, DataLoader, random_split
+import torchvision.transforms as T
+
+
 import sys
-sys.path.append('..')
-from config import IMAGE_SIZE, BATCH_SIZE, DATA_DIR
+ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(ROOT_DIR)
+import config
+
+
+
+def extract_label_from_filename(fname: str) -> int:
+    label = int(fname.split("_label_")[1].replace(".png", ""))
+    return label - 1  
+
+
+def get_transforms(train: bool):
+    base = [
+        T.Grayscale(num_output_channels=config.IN_CHANNELS),
+        T.Resize((config.IMG_SIZE, config.IMG_SIZE)),
+    ]
+
+    aug = []
+    if train:
+        aug = [
+            T.RandomRotation(10),
+            T.RandomAffine(degrees=0, translate=(0.05, 0.05)),
+        ]
+
+    tail = [
+        T.ToTensor(),
+        T.Normalize((0.5,), (0.5,)),
+    ]
+
+    return T.Compose(base + aug + tail)
+
 
 
 class ArabicLetterDataset(Dataset):
-    """
-    Custom Dataset for Arabic Handwritten Letters.
+    def __init__(self, img_dir: str, transform):
+        self.img_dir = img_dir
+        self.transform = transform
 
-    This class tells PyTorch HOW to:
-    1. Find the data
-    2. Load a single sample
-    3. Transform it properly
+        self.files = [f for f in os.listdir(self.img_dir) if f.endswith(".png")]
+        self.files.sort()
 
-    You MUST implement these methods:
-    - __init__: Initialize the dataset (load CSV, setup transforms)
-    - __len__: Return total number of samples
-    - __getitem__: Return ONE sample (image, label) given an index
-
-    -------------------------------------------------------------------------
-    TODO: Complete this class!
-
-    HINTS:
-    - The CSV file probably has columns like: image_path, label
-    - Use PIL.Image to load images
-    - Use transforms to resize and convert to tensor
-    -------------------------------------------------------------------------
-    """
-
-    def __init__(self, csv_file, root_dir, transform=None):
-        """
-        Initialize the dataset.
-
-        Args:
-            csv_file (str): Path to CSV file with image paths and labels
-            root_dir (str): Directory with all the images
-            transform: Optional transform to apply to images
-
-        TODO:
-        1. Load the CSV file using pandas
-        2. Store the root directory
-        3. Store/create the transform pipeline
-        """
-        # TODO: Load the CSV file
-        # self.data_frame = pd.read_csv(???)
-
-        # TODO: Store root directory
-        # self.root_dir = ???
-
-        # TODO: Store transform (or create default)
-        # self.transform = ???
-
-        pass  # Remove this when you implement
+        if len(self.files) == 0:
+            raise RuntimeError(f"No .png images found in {self.img_dir}")
 
     def __len__(self):
-        """
-        Return the total number of samples in the dataset.
-
-        TODO:
-        Return the number of rows in your dataframe
-
-        Example:
-            return len(self.data_frame)
-        """
-        # TODO: Implement this
-        pass
+        return len(self.files)
 
     def __getitem__(self, idx):
-        """
-        Get ONE sample from the dataset.
+        fname = self.files[idx]
+        img_path = os.path.join(self.img_dir, fname)
 
-        This method is called when you do: dataset[0], dataset[1], etc.
+        image = Image.open(img_path).convert("RGB")
+        image = self.transform(image)
 
-        Args:
-            idx (int): Index of the sample to retrieve
+        label = extract_label_from_filename(fname)
 
-        Returns:
-            tuple: (image_tensor, label)
-
-        TODO:
-        1. Get the image path from the CSV
-        2. Load the image using PIL
-        3. Get the label from the CSV
-        4. Apply transforms to the image
-        5. Return (transformed_image, label)
-
-        HINTS:
-        - img_path = os.path.join(self.root_dir, self.data_frame.iloc[idx, 0])
-        - image = Image.open(img_path)
-        - label = self.data_frame.iloc[idx, 1]
-        """
-        # TODO: Implement this
-        pass
+        return image, label
 
 
-def get_transforms():
-    """
-    Create the transformation pipeline for images.
+def create_datasets():
+    train_dir = str(config.TRAIN_DIR)
+    if not os.path.isabs(train_dir):
+        train_dir = os.path.join(ROOT_DIR, train_dir)
 
-    Transforms do things like:
-    - Resize images to consistent size
-    - Convert to Tensor (0-255 → 0-1)
-    - Normalize values
+    full_ds = ArabicLetterDataset(
+        train_dir,
+        transform=get_transforms(train=True)
+    )
 
-    TODO:
-    Create a transforms.Compose() with:
-    1. transforms.Resize((IMAGE_SIZE, IMAGE_SIZE))
-    2. transforms.Grayscale(num_output_channels=1)  # If images are grayscale
-    3. transforms.ToTensor()  # Converts to tensor and scales to [0,1]
-    4. transforms.Normalize((0.5,), (0.5,))  # Scale to [-1,1]
+    val_len = int(config.VAL_RATIO * len(full_ds))
+    train_len = len(full_ds) - val_len
 
-    Returns:
-        transforms.Compose: The transformation pipeline
-    """
-    # TODO: Implement this
-    # transform = transforms.Compose([
-    #     ???
-    # ])
-    # return transform
-    pass
+    g = torch.Generator().manual_seed(config.SEED)
+    train_ds, val_ds = random_split(full_ds, [train_len, val_len], generator=g)
+
+    val_ds.dataset.transform = get_transforms(train=False)
+
+    return train_ds, val_ds
 
 
-def create_data_loaders(train_dataset, val_dataset):
-    """
-    Wrap datasets in DataLoaders.
+def create_data_loaders():
+    train_ds, val_ds = create_datasets()
 
-    DataLoaders help by:
-    - Loading data in batches (not all at once)
-    - Shuffling data (for training)
-    - Loading data in parallel (faster)
+    train_loader = DataLoader(
+        train_ds,
+        batch_size=config.BATCH_SIZE,
+        shuffle=True,
+        num_workers=config.NUM_WORKERS,
+        pin_memory=True,
+    )
 
-    Args:
-        train_dataset: Training dataset
-        val_dataset: Validation dataset
+    val_loader = DataLoader(
+        val_ds,
+        batch_size=config.BATCH_SIZE,
+        shuffle=False,
+        num_workers=config.NUM_WORKERS,
+        pin_memory=True,
+    )
 
-    Returns:
-        tuple: (train_loader, val_loader)
-
-    TODO:
-    Use torch.utils.data.DataLoader with:
-    - batch_size=BATCH_SIZE
-    - shuffle=True for training, False for validation
-    - num_workers=2 (parallel loading)
-    """
-    # TODO: Implement this
-    # train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
-    # val_loader = DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=False)
-    # return train_loader, val_loader
-    pass
+    return train_loader, val_loader
 
 
-# =============================================================================
-# TESTING YOUR IMPLEMENTATION
-# =============================================================================
+
 if __name__ == "__main__":
-    """
-    Test your dataset implementation here.
+    print("=== DATASET TEST ===")
 
-    Uncomment and run to verify everything works:
-    """
-    print("Testing Dataset Implementation...")
+    train_loader, val_loader = create_data_loaders()
 
-    # TODO: Uncomment when ready to test
-    # transform = get_transforms()
-    # dataset = ArabicLetterDataset(
-    #     csv_file="path/to/your/labels.csv",
-    #     root_dir="path/to/your/images",
-    #     transform=transform
-    # )
-    #
-    # print(f"Dataset size: {len(dataset)}")
-    #
-    # # Get one sample
-    # image, label = dataset[0]
-    # print(f"Image shape: {image.shape}")
-    # print(f"Label: {label}")
+    x, y = next(iter(train_loader))
+    print("Train batch images:", x.shape)
+    print("Train batch labels:", y[:10].tolist())
 
-    print("Dataset test complete!")
+    xv, yv = next(iter(val_loader))
+    print("Val batch images:", xv.shape)
+
+    print("=== OK ===")
