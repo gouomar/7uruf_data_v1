@@ -1,3 +1,18 @@
 data/
 myTasks.md
 OMAR_README.md
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Model files (too large for git)
+models/*.pth
+
+# Virtual environment
+.venv/
+venv/
+
+# Jupyter
+.ipynb_checkpoints/
