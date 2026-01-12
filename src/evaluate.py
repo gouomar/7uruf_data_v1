@@ -2,42 +2,11 @@
 ================================================================================
 PILLAR 4: VALIDATION & EVALUATION (evaluate.py)
 ================================================================================
-
-🎯 PURPOSE:
-    Prove your model works on data it has NEVER seen before.
-    A model that memorizes training data is useless!
-
-📚 CONCEPTS YOU NEED TO LEARN FIRST:
-    1. Accuracy: % of correct predictions
-    2. Confusion Matrix: Shows what mistakes the model makes
-    3. Overfitting: Model memorizes training data, fails on new data
-    4. Train/Test Split: Separate data for training vs evaluation
-
-🔑 KEY CONCEPTS:
-    - Accuracy = (Correct Predictions) / (Total Predictions) × 100
-    - Confusion Matrix: A table showing predicted vs actual labels
-    - Per-class accuracy: How well does it recognize each letter?
-
-📖 RESOURCES TO STUDY:
-    - Confusion Matrix: https://www.youtube.com/watch?v=Kdsp6soqA7o
-    - scikit-learn metrics: https://scikit-learn.org/stable/modules/model_evaluation.html
-
-💡 THE BIG PICTURE:
-
-    CONFUSION MATRIX EXAMPLE (3 classes):
-
-                    Predicted
-                    أ    ب    ت
-    Actual    أ   [45]   3    2     ← 45 correct, 5 mistakes
-              ب    2   [48]   0     ← 48 correct, 2 mistakes
-              ت    1    4   [45]    ← 45 correct, 5 mistakes
-
-    Diagonal = Correct predictions
-    Off-diagonal = Mistakes (which letters get confused?)
-
+Omar's part - Metrics, confusion matrix, classification report
 ================================================================================
 """
 
+import os
 import torch
 import numpy as np
 import matplotlib.pyplot as plt
@@ -47,15 +16,41 @@ from tqdm import tqdm
 
 # Import config
 import sys
-sys.path.append('..')
+
+sys.path.append("..")
 from config import DEVICE, NUM_CLASSES, OUTPUT_DIR
 
 
-# Arabic letter labels (you may need to adjust based on your dataset)
+# Arabic letter labels
 ARABIC_LETTERS = [
-    'ا', 'ب', 'ت', 'ث', 'ج', 'ح', 'خ', 'د', 'ذ', 'ر',
-    'ز', 'س', 'ش', 'ص', 'ض', 'ط', 'ظ', 'ع', 'غ', 'ف',
-    'ق', 'ك', 'ل', 'م', 'ن', 'ه', 'و', 'ي'
+    "ا",
+    "ب",
+    "ت",
+    "ث",
+    "ج",
+    "ح",
+    "خ",
+    "د",
+    "ذ",
+    "ر",
+    "ز",
+    "س",
+    "ش",
+    "ص",
+    "ض",
+    "ط",
+    "ظ",
+    "ع",
+    "غ",
+    "ف",
+    "ق",
+    "ك",
+    "ل",
+    "م",
+    "ن",
+    "ه",
+    "و",
+    "ي",
 ]
 
 
@@ -70,38 +65,28 @@ def evaluate_model(model, test_loader, device=DEVICE):
 
     Returns:
         tuple: (all_predictions, all_labels, accuracy)
-
-    TODO:
-    1. Set model to evaluation mode
-    2. Loop through test data
-    3. Collect all predictions and true labels
-    4. Calculate accuracy
     """
-    # TODO: Implement this function
+    model.eval()
+    all_predictions = []
+    all_labels = []
 
-    # model.eval()
-    # all_predictions = []
-    # all_labels = []
-    #
-    # with torch.no_grad():
-    #     for images, labels in tqdm(test_loader, desc="Evaluating"):
-    #         images = images.to(device)
-    #
-    #         outputs = model(images)
-    #         _, predicted = torch.max(outputs, 1)
-    #
-    #         all_predictions.extend(predicted.cpu().numpy())
-    #         all_labels.extend(labels.numpy())
-    #
-    # all_predictions = np.array(all_predictions)
-    # all_labels = np.array(all_labels)
-    # accuracy = accuracy_score(all_labels, all_predictions) * 100
-    #
-    # print(f"\nOverall Accuracy: {accuracy:.2f}%")
-    #
-    # return all_predictions, all_labels, accuracy
+    with torch.no_grad():
+        for images, labels in tqdm(test_loader, desc="Evaluating"):
+            images = images.to(device)
 
-    pass  # Remove this when you implement
+            outputs = model(images)
+            _, predicted = torch.max(outputs, 1)
+
+            all_predictions.extend(predicted.cpu().numpy())
+            all_labels.extend(labels.numpy())
+
+    all_predictions = np.array(all_predictions)
+    all_labels = np.array(all_labels)
+    accuracy = accuracy_score(all_labels, all_predictions) * 100
+
+    print(f"\nOverall Accuracy: {accuracy:.2f}%")
+
+    return all_predictions, all_labels, accuracy
 
 
 def plot_confusion_matrix(y_true, y_pred, labels=None, save_path=None):
@@ -113,105 +98,96 @@ def plot_confusion_matrix(y_true, y_pred, labels=None, save_path=None):
         y_pred: Array of predicted labels
         labels: List of class names (Arabic letters)
         save_path: Path to save the figure (optional)
-
-    TODO:
-    1. Calculate confusion matrix using sklearn
-    2. Create a heatmap using seaborn
-    3. Add labels and title
-    4. Save or display
     """
     if labels is None:
         labels = ARABIC_LETTERS[:NUM_CLASSES]
 
-    # TODO: Implement this function
+    # Calculate confusion matrix
+    cm = confusion_matrix(y_true, y_pred)
 
-    # # Calculate confusion matrix
-    # cm = confusion_matrix(y_true, y_pred)
-    #
-    # # Create figure
-    # plt.figure(figsize=(12, 10))
-    # sns.heatmap(cm, annot=True, fmt='d', cmap='Blues',
-    #             xticklabels=labels, yticklabels=labels)
-    # plt.title('Confusion Matrix - Arabic Letter Recognition')
-    # plt.xlabel('Predicted Label')
-    # plt.ylabel('True Label')
-    # plt.tight_layout()
-    #
-    # if save_path:
-    #     plt.savefig(save_path)
-    #     print(f"Confusion matrix saved to {save_path}")
-    #
-    # plt.show()
+    # Create figure
+    plt.figure(figsize=(12, 10))
+    sns.heatmap(
+        cm, annot=True, fmt="d", cmap="Blues", xticklabels=labels, yticklabels=labels
+    )
+    plt.title("Confusion Matrix - Arabic Letter Recognition")
+    plt.xlabel("Predicted Label")
+    plt.ylabel("True Label")
+    plt.tight_layout()
 
-    pass  # Remove this when you implement
+    if save_path:
+        os.makedirs(os.path.dirname(save_path), exist_ok=True)
+        plt.savefig(save_path)
+        print(f"Confusion matrix saved to {save_path}")
+
+    plt.show()
 
 
 def plot_training_history(history, save_path=None):
     """
     Plot training and validation loss/accuracy curves.
 
-    These curves help you understand:
-    - Is the model learning? (loss going down)
-    - Is it overfitting? (train acc >> val acc)
-    - When to stop training? (val loss starts going up)
-
     Args:
         history: Dictionary with 'train_loss', 'train_acc', 'val_loss', 'val_acc'
         save_path: Path to save the figure (optional)
     """
-    # TODO: Implement this function
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
 
-    # fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
-    #
-    # # Plot Loss
-    # ax1.plot(history['train_loss'], label='Train Loss', marker='o')
-    # ax1.plot(history['val_loss'], label='Validation Loss', marker='o')
-    # ax1.set_title('Loss over Epochs')
-    # ax1.set_xlabel('Epoch')
-    # ax1.set_ylabel('Loss')
-    # ax1.legend()
-    # ax1.grid(True)
-    #
-    # # Plot Accuracy
-    # ax2.plot(history['train_acc'], label='Train Accuracy', marker='o')
-    # ax2.plot(history['val_acc'], label='Validation Accuracy', marker='o')
-    # ax2.set_title('Accuracy over Epochs')
-    # ax2.set_xlabel('Epoch')
-    # ax2.set_ylabel('Accuracy (%)')
-    # ax2.legend()
-    # ax2.grid(True)
-    #
-    # plt.tight_layout()
-    #
-    # if save_path:
-    #     plt.savefig(save_path)
-    #     print(f"Training history saved to {save_path}")
-    #
-    # plt.show()
+    # Plot Loss
+    ax1.plot(history["train_loss"], label="Train Loss", marker="o")
+    ax1.plot(history["val_loss"], label="Validation Loss", marker="o")
+    ax1.set_title("Loss over Epochs")
+    ax1.set_xlabel("Epoch")
+    ax1.set_ylabel("Loss")
+    ax1.legend()
+    ax1.grid(True)
 
-    pass  # Remove this when you implement
+    # Plot Accuracy
+    ax2.plot(history["train_acc"], label="Train Accuracy", marker="o")
+    ax2.plot(history["val_acc"], label="Validation Accuracy", marker="o")
+    ax2.set_title("Accuracy over Epochs")
+    ax2.set_xlabel("Epoch")
+    ax2.set_ylabel("Accuracy (%)")
+    ax2.legend()
+    ax2.grid(True)
+
+    plt.tight_layout()
+
+    if save_path:
+        os.makedirs(os.path.dirname(save_path), exist_ok=True)
+        plt.savefig(save_path)
+        print(f"Training history saved to {save_path}")
+
+    plt.show()
 
 
-def get_classification_report(y_true, y_pred, labels=None):
+def get_classification_report(y_true, y_pred, labels=None, save_path=None):
     """
-    Print a detailed classification report with precision, recall, F1-score.
+    Print and optionally save a detailed classification report.
 
     Args:
         y_true: Array of true labels
         y_pred: Array of predicted labels
         labels: List of class names
+        save_path: Path to save the report (optional)
     """
     if labels is None:
         labels = ARABIC_LETTERS[:NUM_CLASSES]
 
-    # TODO: Implement this function
+    report = classification_report(y_true, y_pred, target_names=labels)
+    print("\nClassification Report:")
+    print("=" * 60)
+    print(report)
 
-    # report = classification_report(y_true, y_pred, target_names=labels)
-    # print("\nClassification Report:")
-    # print("=" * 60)
-    # print(report)
+    if save_path:
+        os.makedirs(os.path.dirname(save_path), exist_ok=True)
+        with open(save_path, "w", encoding="utf-8") as f:
+            f.write("Classification Report\n")
+            f.write("=" * 60 + "\n")
+            f.write(report)
+        print(f"Classification report saved to {save_path}")
 
-    pass  # Remove this when you implement
+    return report
 
 
 def predict_single_image(model, image, device=DEVICE):
@@ -225,10 +201,6 @@ def predict_single_image(model, image, device=DEVICE):
 
     Returns:
         tuple: (predicted_class, confidence_score, all_probabilities)
-
-    This is useful for:
-    - Testing with your own handwritten letters
-    - Building a demo/app
     """
     model.eval()
 
@@ -252,18 +224,18 @@ def predict_single_image(model, image, device=DEVICE):
     return predicted_class, confidence_score, probabilities.cpu().numpy()
 
 
-def visualize_predictions(model, test_loader, num_images=16, device=DEVICE):
+def visualize_predictions(
+    model, test_loader, num_images=16, device=DEVICE, save_path=None
+):
     """
     Visualize model predictions on a grid of test images.
-
-    Shows the image, true label, and predicted label.
-    Correct predictions in green, wrong in red.
 
     Args:
         model: The trained model
         test_loader: DataLoader with test data
         num_images: Number of images to display
         device: 'cuda' or 'cpu'
+        save_path: Path to save the figure (optional)
     """
     model.eval()
 
@@ -280,7 +252,9 @@ def visualize_predictions(model, test_loader, num_images=16, device=DEVICE):
     predictions = predictions.cpu()
 
     # Plot
-    fig, axes = plt.subplots(4, 4, figsize=(12, 12))
+    rows = int(np.ceil(np.sqrt(num_images)))
+    cols = rows
+    fig, axes = plt.subplots(rows, cols, figsize=(12, 12))
 
     for i, ax in enumerate(axes.flat):
         if i < len(images):
@@ -288,21 +262,58 @@ def visualize_predictions(model, test_loader, num_images=16, device=DEVICE):
             true_label = ARABIC_LETTERS[labels[i]]
             pred_label = ARABIC_LETTERS[predictions[i]]
 
-            ax.imshow(img, cmap='gray')
+            ax.imshow(img, cmap="gray")
 
-            color = 'green' if labels[i] == predictions[i] else 'red'
-            ax.set_title(f'True: {true_label}\nPred: {pred_label}', color=color)
+            color = "green" if labels[i] == predictions[i] else "red"
+            ax.set_title(f"True: {true_label}\nPred: {pred_label}", color=color)
 
-        ax.axis('off')
+        ax.axis("off")
 
     plt.tight_layout()
-    plt.savefig(f'{OUTPUT_DIR}/prediction_samples.png')
+
+    if save_path:
+        os.makedirs(os.path.dirname(save_path), exist_ok=True)
+        plt.savefig(save_path)
+        print(f"Predictions visualization saved to {save_path}")
+
     plt.show()
 
 
-# =============================================================================
-# TESTING
-# =============================================================================
+def get_per_class_accuracy(y_true, y_pred, labels=None):
+    """
+    Calculate accuracy for each class.
+
+    Args:
+        y_true: Array of true labels
+        y_pred: Array of predicted labels
+        labels: List of class names
+
+    Returns:
+        dict: Per-class accuracy
+    """
+    if labels is None:
+        labels = ARABIC_LETTERS[:NUM_CLASSES]
+
+    y_true = np.array(y_true)
+    y_pred = np.array(y_pred)
+
+    per_class_acc = {}
+    for i, label in enumerate(labels):
+        mask = y_true == i
+        if mask.sum() > 0:
+            acc = (y_pred[mask] == y_true[mask]).mean() * 100
+            per_class_acc[label] = acc
+        else:
+            per_class_acc[label] = 0.0
+
+    print("\nPer-Class Accuracy:")
+    print("-" * 30)
+    for label, acc in per_class_acc.items():
+        print(f"  {label}: {acc:.2f}%")
+
+    return per_class_acc
+
+
 if __name__ == "__main__":
     print("Evaluation module loaded successfully!")
     print(f"Number of classes: {NUM_CLASSES}")
